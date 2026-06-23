@@ -1,0 +1,18 @@
+[package]
+name = "rustic_opendal"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bytes = "1.12.0"
+log = "0.4.33"
+opendal-core = "0.57.0"
+serde = { version = "1.0.228", features = ["derive"] }
+rustic_core = { git = "https://github.com/ericg2/rustic_core" }
+rustic_backend = { git = "https://github.com/ericg2/rustic_core" }
+tokio = { version = "1", features = ["macros", "rt"] }
+humantime-serde = "1"
+
+[dev-dependencies]
+opendal = "0.57.0"
+tempfile = "3.27.0"
