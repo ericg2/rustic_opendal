@@ -15,9 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#![cfg_attr(docsrs, feature(doc_cfg))]
 //! Fs service implementation for Apache OpenDAL.
-#![deny(missing_docs)]
 
 mod backend;
 mod config;
