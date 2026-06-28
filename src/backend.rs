@@ -15,7 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::config::{RusticVfsConfig};
+use crate::config::RusticVfsConfig;
+use log::warn;
 use opendal_core::raw::oio::Entry;
 use opendal_core::raw::*;
 use opendal_core::{Buffer, Capability, EntryMode, Error, ErrorKind, Metadata};
@@ -25,7 +26,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use std::vec;
-use log::warn;
 use tokio::sync::RwLock;
 use tokio::time;
 
@@ -159,30 +159,21 @@ fn build_vfs(repo: &IndexedRepo) -> opendal_core::Result<Vfs> {
 /// * `interval` – How often to attempt a rebuild.
 fn spawn_refresh_task(vfs: &Arc<RwLock<Vfs>>, repo: Arc<IndexedRepo>, interval: Duration) {
     let weak_vfs: Weak<RwLock<Vfs>> = Arc::downgrade(vfs);
-
+    let mut ticker = time::interval(interval);
     tokio::spawn(async move {
-        let mut ticker = time::interval(interval);
-        // The first tick fires immediately; discard it to avoid a redundant
-        // rebuild right after construction.
-        ticker.tick().await;
-
         loop {
             ticker.tick().await;
-
-            // Exit cleanly when the owning VfsBackend has been dropped.
             let Some(arc_vfs) = weak_vfs.upgrade() else {
                 break;
             };
-
-            match build_vfs(&repo) {
-                Ok(new_vfs) => {
+            let repo_clone = repo.clone();
+            // Move blocking work off the executor thread
+            match tokio::task::spawn_blocking(move || build_vfs(&repo_clone)).await {
+                Ok(Ok(new_vfs)) => {
                     *arc_vfs.write().await = new_vfs;
                 }
-                Err(e) => {
-                    // Keep the existing VFS intact so in-flight reads are
-                    // unaffected; the next tick will try again.
-                    warn!("VFS refresh failed (keeping previous snapshot): {e}");
-                }
+                Ok(Err(e)) => warn!("VFS refresh failed: {e}"),
+                Err(e) => warn!("VFS refresh panicked: {e}"),
             }
         }
     });
@@ -350,9 +341,12 @@ impl Access for VfsBackend {
         let node = self.node_from_path(path).await?;
         let meta = meta_from_node(&node);
         let file = self.repo.open_file(&node).map_err(|e| {
-            Error::new(ErrorKind::Unexpected, "Failed to open file in rustic backend.")
-                .set_source(e)
-                .set_temporary()
+            Error::new(
+                ErrorKind::Unexpected,
+                "Failed to open file in rustic backend.",
+            )
+            .set_source(e)
+            .set_temporary()
         })?;
         let reader = VfsReader::new(
             file,
@@ -438,7 +432,7 @@ fn normalize_path(path: &str) -> String {
 /// in the window; once exhausted, `read` returns an empty [`Buffer`].
 pub struct VfsReader {
     /// The open rustic file handle (contains chunk metadata, not raw bytes).
-    file: OpenFile,
+    file: Arc<OpenFile>,
     /// Repository used to fetch blob data for each chunk.
     repo: Arc<IndexedRepo>,
     /// Current read position as a byte offset into the file.
@@ -462,7 +456,12 @@ impl VfsReader {
         pos: usize,
         len: Option<usize>,
     ) -> Self {
-        Self { file, repo, pos, len }
+        Self {
+            file: Arc::new(file),
+            repo,
+            pos,
+            len,
+        }
     }
 }
 
@@ -485,14 +484,13 @@ impl oio::Read for VfsReader {
             None => BUFFER_SIZE,
         };
 
-        let data = self
-            .repo
-            .read_file_at(&self.file, self.pos, read_size)
-            .map_err(|e| {
-                Error::new(ErrorKind::Unexpected, "Failed to read file from rustic backend.")
-                    .set_source(e)
-                    .set_temporary()
-            })?;
+        let file = self.file.clone();
+        let repo = self.repo.clone();
+        let pos = self.pos;
+        let data = tokio::task::spawn_blocking(move || repo.read_file_at(&file, pos, read_size))
+            .await
+            .map_err(|e| Error::new(ErrorKind::Unexpected, "join error").set_source(e))?
+            .map_err(|e| Error::new(ErrorKind::Unexpected, "read failed").set_source(e))?;
 
         self.pos += data.len();
         if let Some(remaining) = self.len.as_mut() {
