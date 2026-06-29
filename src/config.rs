@@ -51,7 +51,7 @@ use crate::backend::VfsBackend;
 /// | `credentials`      | ✓                      | Repository will not open without these |
 /// | `refresh_interval` | –                      | Defaults to 5 minutes when `None` |
 ///
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[doc = include_str!("docs.md")]
 pub struct RusticVfsConfig {
     /// Options that describe the rustic repository to open.
