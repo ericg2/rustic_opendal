@@ -3773,7 +3773,7 @@ dependencies = [
 [[package]]
 name = "rustic_backend"
 version = "0.7.0"
-source = "git+https://github.com/ericg2/rustic_core#012e960b1af8ce12a65188c1f53847716f84cb44"
+source = "git+https://github.com/ericg2/rustic_core#4808616113bb3bb3a532d056714133725948e515"
 dependencies = [
  "aho-corasick",
  "backon",
@@ -3819,7 +3819,7 @@ checksum = "fbcebf2228827bc4b61cb54dfd84cf43aacf06ca2dfe4c014b136a0e32b876e2"
 [[package]]
 name = "rustic_core"
 version = "0.13.0"
-source = "git+https://github.com/ericg2/rustic_core#012e960b1af8ce12a65188c1f53847716f84cb44"
+source = "git+https://github.com/ericg2/rustic_core#4808616113bb3bb3a532d056714133725948e515"
 dependencies = [
  "aes256ctr_poly1305aes",
  "backon",
