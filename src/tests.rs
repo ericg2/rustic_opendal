@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
     use opendal_core::Operator;
-    use rustic_backend::local::{LocalConfig, LocalSource};
+    use rustic_backend::local::{LocalRepo, LocalSource};
     use rustic_backend::BackendOptions;
     use rustic_core::repofile::SnapshotFile;
-    use rustic_core::{BackupOptions, ConfigOptions, Credentials, KeyOptions, PathList, Repository, RepositoryOptions};
+    use rustic_core::{BackupOptions, CancelToken, ConfigOptions, Credentials, KeyOptions, PathList, Repository, RepositoryOptions};
     use std::fs;
     use tempfile::tempdir;
     use crate::config::RusticVfsConfig;
@@ -23,7 +23,7 @@ mod tests {
     async fn backup_and_read_through_vfs() {
         // ── 1. Repository ────────────────────────────────────────────────────
         let repo_dir = tempdir().expect("repo tempdir");
-        let local = LocalConfig::new(repo_dir);
+        let local = LocalRepo::new(repo_dir);
 
         let backends = BackendOptions::default()
             .with_repo(&local)
@@ -51,7 +51,7 @@ mod tests {
         let mut file = SnapshotFile::default();
         file.hostname = "testvm".into();
         file.label = "test".into();
-        file = repo.backup(&BackupOptions::default(), &LocalSource::new(paths), file)
+        file = repo.backup(&BackupOptions::default(), &LocalSource::new(paths), file, CancelToken::new())
             .expect("backup");
 
         // ── 4. VFS operator ──────────────────────────────────────────────────
