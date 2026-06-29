@@ -51,17 +51,6 @@ use crate::backend::VfsBackend;
 /// | `credentials`      | ✓                      | Repository will not open without these |
 /// | `refresh_interval` | –                      | Defaults to 5 minutes when `None` |
 ///
-/// # Example
-///
-/// ```rust
-/// let config = RusticVfsConfig {
-///     options: Some(RepositoryOptions::default()),
-///     backend: Some(BackendOptions::default()),
-///     credentials: Some(Credentials::from_password("s3cr3t")),
-///     refresh_interval: Some(Duration::from_secs(60)),
-/// };
-/// let backend = config.into_builder().build()?;
-/// ```
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[doc = include_str!("docs.md")]
 pub struct RusticVfsConfig {
@@ -136,16 +125,6 @@ impl Configurator for RusticVfsConfig {
 /// before [`build`](Builder::build); omitting any of them will return a
 /// [`ConfigInvalid`](opendal_core::ErrorKind::ConfigInvalid) error.
 ///
-/// # Example
-///
-/// ```rust
-/// let backend = RusticVfsBuilder::default()
-///     .with_options(my_repository_options)
-///     .with_backend(my_backend_options)
-///     .with_credentials(Credentials::from_password("s3cr3t"))
-///     .with_refresh_interval(Duration::from_secs(30))
-///     .build()?;
-/// ```
 #[derive(Debug, Default, Clone)]
 pub struct RusticVfsBuilder {
     pub(super) config: RusticVfsConfig,
