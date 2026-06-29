@@ -2318,7 +2318,7 @@ dependencies = [
 [[package]]
 name = "opendal-ext"
 version = "0.57.0"
-source = "git+https://www.github.com/ericg2/opendal-ext.git#ec24d6597fcfca1161fbada984a6d1efd6a5f9ca"
+source = "git+https://github.com/ericg2/opendal-ext.git#ec24d6597fcfca1161fbada984a6d1efd6a5f9ca"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3773,7 +3773,7 @@ dependencies = [
 [[package]]
 name = "rustic_backend"
 version = "0.7.0"
-source = "git+https://github.com/ericg2/rustic_core#4808616113bb3bb3a532d056714133725948e515"
+source = "git+https://github.com/ericg2/rustic_core#da94c55b56e431050692a7f9583592fbb9197ddc"
 dependencies = [
  "aho-corasick",
  "backon",
@@ -3819,7 +3819,7 @@ checksum = "fbcebf2228827bc4b61cb54dfd84cf43aacf06ca2dfe4c014b136a0e32b876e2"
 [[package]]
 name = "rustic_core"
 version = "0.13.0"
-source = "git+https://github.com/ericg2/rustic_core#4808616113bb3bb3a532d056714133725948e515"
+source = "git+https://github.com/ericg2/rustic_core#da94c55b56e431050692a7f9583592fbb9197ddc"
 dependencies = [
  "aes256ctr_poly1305aes",
  "backon",
